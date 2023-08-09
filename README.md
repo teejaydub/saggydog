@@ -25,6 +25,8 @@ and to go to "warning" mode below 3.0 V and to "error" mode below 2.7 V.
 
 Plug the programmed board into USB, or otherwise power it and connect it to a serial port.
 
+Connect jumpers from the board's `GND` and `A1` pins to the device-under-test's `GND` and the pin you want to log.
+
 Monitor the serial output via a console program.
 
 ## Tricks
