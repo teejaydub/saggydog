@@ -22,7 +22,7 @@
 // Define these to flag when the minimum V gets to these voltages.
 // Currently requires LOG_MODE = LOG_VOLTAGE.
 #define WARNING_LEVEL_V  3.0
-#define ERROR_LEVEL_V  2.7
+#define ERROR_LEVEL_V  2.89
 
 // Define these to log more quickly when we've seen a warning or error state.
 // Can be floating-point expressions.
