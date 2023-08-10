@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#define FASTLED_INTERNAL  // LED is not connected to hardware SPI pins; suppress warnings
+#include <FastLED.h>
+
 
 //===================================================================
 // Feature configuration
@@ -29,9 +32,12 @@
 #define WARNING_PERIOD_S  1
 #define ERROR_PERIOD_S 0.2
 
+// Define this to pulse an WS2812-compatible RGB LED on this pin.
+#define RGB_LED_PIN  8
+
 
 //===================================================================
-// Internal use constants
+// States
 
 #define STATE_NORMAL  1
 #define STATE_WARNING  2
@@ -43,14 +49,19 @@ int state = STATE_NORMAL;
 #define MS_PER_SEC  1000
 
 
+void set_state(int newState)
+{
+  state = newState;
+}
+
+
 //===================================================================
-// Reading variables
+// Readings
 
 // The lowest reading we've seen recently, in D/A units.
 int minReading;
 unsigned long lastReport;
 unsigned long readingCount;
-
 
 void reset_reading(void)
 {
@@ -63,11 +74,6 @@ void reset_reading(void)
 float reading_to_float(int reading)
 {
   return reading * 1.0 / AD_MAX * SUPPLY_V;
-}
-
-void set_state(int newState)
-{
-  state = newState;
 }
 
 void accumulate_readings(void)
@@ -99,6 +105,54 @@ void accumulate_readings(void)
   ++readingCount;
   #endif
 }
+
+
+//===================================================================
+// LEDs
+
+#define MAX_LED_BRIGHTNESS  255
+#define LED_FADE_STEP_MS  50
+
+CRGB leds[1];
+unsigned long lastLedFade = 0;
+
+void setup_led(void)
+{
+  FastLED.addLeds<WS2812, RGB_LED_PIN, GBR>(leds, 1);
+  FastLED.setBrightness(140);
+  FastLED.showColor(CRGB::MediumVioletRed);
+}
+
+void set_led_to_state(void)
+{
+  switch (state) {
+  case STATE_WARNING:
+    leds[0] = CRGB::Gold;
+    break;
+  case STATE_ERROR:
+    leds[0] = CRGB::Red;
+    break;
+  default:
+    leds[0] = CRGB::Blue;
+  }
+  FastLED.show();
+
+  lastLedFade = millis();
+}
+
+void fade_led(void)
+{
+  if (millis() - lastLedFade > LED_FADE_STEP_MS) {
+    // fadeToBlackBy(leds, 1, 1);
+    // FastLED.show();
+
+    lastLedFade = millis();
+  }
+}
+
+
+//===================================================================
+// Reporting to console
 
 void report(void)
 {
@@ -148,16 +202,19 @@ void maybe_report(void)
   if (millis() - lastReport > periodMs) {
     report();
     reset_reading();
+    set_led_to_state();
   }
 }
 
-void set_led_color(void)
-{
-  
-}
+
+//===================================================================
+// Main
 
 void setup() {
   pinMode(LOG_PIN, INPUT);
+
+  setup_led();
+
   Serial.begin(LOG_BAUD);
 
   Serial.println();
@@ -181,6 +238,6 @@ void setup() {
 
 void loop() {
   accumulate_readings();
-  set_led_color();
+  fade_led();
   maybe_report();
 }
