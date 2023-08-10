@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
-#define FASTLED_INTERNAL  // LED is not connected to hardware SPI pins; suppress warnings
-#include <FastLED.h>
+#include <Freenove_WS2812_Lib_for_ESP32.h>
 
 
 //===================================================================
@@ -110,39 +109,38 @@ void accumulate_readings(void)
 //===================================================================
 // LEDs
 
-#define MAX_LED_BRIGHTNESS  100
-#define LED_FADE_STEP_MS  50
+#define MAX_LED_BRIGHTNESS  10
+#define LED_FADE_STEP_MS  500
+#define NUM_COLORS  5
 
-CRGB leds[1];
+Freenove_ESP32_WS2812 strip = Freenove_ESP32_WS2812(1, RGB_LED_PIN, 0, TYPE_GRB);
+u8_t m_color[NUM_COLORS][3] = { {255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 255}, {0, 0, 0} };
 unsigned long lastLedFade = 0;
+
+void set_led(u32 color)
+{
+  strip.setLedColor(0, color);
+  strip.show();
+}
 
 void setup_led(void)
 {
-  // FastLED.addLeds<WS2812, RGB_LED_PIN, GRB>(leds, 1);
-  // FastLED.setBrightness(MAX_LED_BRIGHTNESS);
-  // FastLED.clear();
-  // FastLED.show();
-}
-
-void set_led(CRGB color)
-{
-  FastLED.addLeds<WS2812, RGB_LED_PIN, GRB>(leds, 1);
-  FastLED.setBrightness(MAX_LED_BRIGHTNESS);
-  leds[0] = color;
-  FastLED.show();
+  strip.begin();
+  strip.setBrightness(MAX_LED_BRIGHTNESS);
+  set_led(4);
 }
 
 void set_led_to_state(void)
 {
   switch (state) {
   case STATE_WARNING:
-    set_led(CRGB::Gold);
+    set_led(1);
     break;
   case STATE_ERROR:
-    set_led(CRGB::Red);
+    set_led(0);
     break;
   default:
-    set_led(CRGB::Blue);
+    set_led(2);
   }
 
   lastLedFade = millis();
@@ -151,8 +149,7 @@ void set_led_to_state(void)
 void fade_led(void)
 {
   if (millis() - lastLedFade > LED_FADE_STEP_MS) {
-    // fadeToBlackBy(leds, 1, 1);
-    // FastLED.show();
+    // set_led(4);
 
     lastLedFade = millis();
   }
