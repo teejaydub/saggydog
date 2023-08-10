@@ -110,7 +110,7 @@ void accumulate_readings(void)
 //===================================================================
 // LEDs
 
-#define MAX_LED_BRIGHTNESS  255
+#define MAX_LED_BRIGHTNESS  100
 #define LED_FADE_STEP_MS  50
 
 CRGB leds[1];
@@ -118,24 +118,32 @@ unsigned long lastLedFade = 0;
 
 void setup_led(void)
 {
-  FastLED.addLeds<WS2812, RGB_LED_PIN, GBR>(leds, 1);
-  FastLED.setBrightness(140);
-  FastLED.showColor(CRGB::MediumVioletRed);
+  // FastLED.addLeds<WS2812, RGB_LED_PIN, GRB>(leds, 1);
+  // FastLED.setBrightness(MAX_LED_BRIGHTNESS);
+  // FastLED.clear();
+  // FastLED.show();
+}
+
+void set_led(CRGB color)
+{
+  FastLED.addLeds<WS2812, RGB_LED_PIN, GRB>(leds, 1);
+  FastLED.setBrightness(MAX_LED_BRIGHTNESS);
+  leds[0] = color;
+  FastLED.show();
 }
 
 void set_led_to_state(void)
 {
   switch (state) {
   case STATE_WARNING:
-    leds[0] = CRGB::Gold;
+    set_led(CRGB::Gold);
     break;
   case STATE_ERROR:
-    leds[0] = CRGB::Red;
+    set_led(CRGB::Red);
     break;
   default:
-    leds[0] = CRGB::Blue;
+    set_led(CRGB::Blue);
   }
-  FastLED.show();
 
   lastLedFade = millis();
 }
