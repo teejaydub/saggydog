@@ -4,25 +4,39 @@
 //===================================================================
 // Feature configuration
 
-#define LOG_PIN  A1  // An Arduino pin number or pin definition macro.
+#ifndef LOG_PIN
+ #define LOG_PIN  A1  // An Arduino pin number or pin definition macro.
+ #define LOG_PIN_NAME  "A1"
+#endif
+
 #define LOG_BAUD  9600  // Baud rate to log on (may not matter for all serial ports on all chips).
 #define REPORT_PERIOD_S  4  // How often to report the voltage.
 
 // What to report for each reading:
 #define LOG_AD  1  // the raw A/D value
-
 #define LOG_VOLTAGE  2  // the voltage: requires setting SUPPLY_V and AD_MAX accurately.
-#define AD_MAX  4096  // the maximum value returned by the A/D on this chip.
-#define SUPPLY_V  3.3  // The reference for the A/D on this chip.
 
 #define LOG_MODE  LOG_VOLTAGE  // Choose one of the modes above.
 
+#ifndef AD_MAX
+ #define AD_MAX  1024  // the maximum value returned by the A/D on this chip.
+#endif
+
+#ifndef SUPPLY_V
+ #define SUPPLY_V  3.3  // The reference for the A/D on this chip.
+#endif
+
 // #define LOG_COUNT  // Define to also note how many readings there were
+  // (mainly useful initially, to see what the normal sample rate is)
 
 // Define these to flag when the minimum V gets to these voltages.
 // Currently requires LOG_MODE = LOG_VOLTAGE.
-#define WARNING_LEVEL_V  3.0
-#define ERROR_LEVEL_V  2.89
+#ifndef WARNING_LEVEL_V
+ #define WARNING_LEVEL_V  3.0
+#endif
+#ifndef ERROR_LEVEL_V
+ #define ERROR_LEVEL_V  2.89
+#endif
 
 // Define these to log more quickly when we've seen a warning or error state.
 // Can be floating-point expressions.
@@ -105,11 +119,14 @@ void report(void)
   #if LOG_MODE == LOG_AD
   Serial.printf("%d", minReading);
   #elif LOG_MODE == LOG_VOLTAGE
-  Serial.printf("%.2f V", reading_to_float(minReading));
+  Serial.print(reading_to_float(minReading), 2);
+  Serial.print(" V");
   #endif
 
   #ifdef LOG_COUNT
-  Serial.printf(" (%d)", readingCount);
+  Serial.print(" (");
+  Serial.print(readingCount);
+  Serial.print(")");
   #endif
 
   #ifdef ERROR_LEVEL_V
@@ -167,13 +184,21 @@ void setup() {
   #elif LOG_MODE == LOG_VOLTAGE
     Serial.print("voltage");
   #endif
-  Serial.printf(" on pin %d.\n", LOG_PIN);
+  Serial.print(" on pin ");
+  Serial.print(LOG_PIN);
+  Serial.print(" = ");
+  Serial.print(LOG_PIN_NAME);
+  Serial.print(".\n");
 
   #ifdef ERROR_LEVEL_V
-  Serial.printf("Highlight errors below %.2f V.\n", ERROR_LEVEL_V);
+  Serial.print("Highlight errors below ");
+  Serial.print(ERROR_LEVEL_V, 2);
+  Serial.print(" V.\n");
   #endif
   #ifdef WARNING_LEVEL_V
-  Serial.printf("Warn below %.2f V.\n", WARNING_LEVEL_V);
+  Serial.print("Warn below ");
+  Serial.print(WARNING_LEVEL_V, 2);
+  Serial.print(" V.\n");
   #endif
 
   reset_reading();
